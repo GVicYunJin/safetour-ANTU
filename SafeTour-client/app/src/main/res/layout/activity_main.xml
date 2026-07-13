@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@color/main_background"
+    android:padding="8dp">
+
+    <!-- 左侧：大预览区（显示当前选中的摄像头画面） -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera_preview"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:layout_margin="8dp"
+        android:background="@drawable/mica_preview_bg"
+        android:clipToOutline="true"
+        android:outlineProvider="background" />
+
+    <!-- 右侧：控制栏 -->
+    <LinearLayout
+        android:id="@+id/right_layout"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="20dp"
+        android:background="@drawable/acrylic_control_bg"
+        android:layout_margin="8dp"
+        android:layout_marginStart="0dp"
+        android:clipToOutline="true"
+        android:outlineProvider="background">
+
+        <!-- 状态指示灯区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+            <View
+                android:id="@+id/status_indicator"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:background="@drawable/indicator_circle" />
+            <TextView
+                android:id="@+id/status_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="运行中"
+                android:textSize="13sp"
+                android:textColor="@color/text_primary_dark"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- 摄像头切换按钮 -->
+        <Button
+            android:id="@+id/switch_camera_btn"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:text="切换"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary_dark"
+            android:background="@drawable/rounded_button"
+            android:layout_marginBottom="20dp"
+            android:elevation="0dp"
+            android:stateListAnimator="@null"
+            android:gravity="center" />
+
+        <!-- 拍照按钮 -->
+        <FrameLayout
+            android:id="@+id/capture_btn"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/capture_button"
+            android:layout_marginBottom="20dp" />
+
+        <!-- 底部弹簧 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- 设置按钮 -->
+        <Button
+            android:id="@+id/settings_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="设置"
+            android:textColor="@color/text_primary_dark"
+            android:background="@drawable/rounded_button"
+            android:elevation="0dp"
+            android:stateListAnimator="@null" />
+
+    </LinearLayout>
+
+</LinearLayout>
