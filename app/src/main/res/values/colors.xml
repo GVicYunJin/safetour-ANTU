@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- 主界面背景色（深灰色，确保白色拍照按钮可见） -->
+    <color name="main_background">#4A4A4A</color>
+    <color name="main_surface">#3A3A3A</color>
+    <color name="main_border">#5A5A5A</color>
+
+    <!-- Windows 11 风格浅色主题色 -->
+    <color name="mica_light_background">#F3F3F3</color>
+    <color name="mica_light_surface">#FAFAFA</color>
+    <color name="acrylic_light_surface">#E8E8EC</color>
+    <color name="acrylic_light_border">#D1D1D6</color>
+    <color name="text_primary_light">#1A1A1A</color>
+    <color name="text_secondary_light">#5E5E5E</color>
+    <color name="text_tertiary_light">#8A8A8A</color>
+
+    <!-- Windows 11 风格深色主题色 -->
+    <color name="mica_dark_background">#202020</color>
+    <color name="mica_dark_surface">#2B2B2B</color>
+    <color name="acrylic_dark_surface">#323232</color>
+    <color name="acrylic_dark_border">#3D3D3D</color>
+    <color name="text_primary_dark">#F3F3F3</color>
+    <color name="text_secondary_dark">#BDBDBD</color>
+    <color name="text_tertiary_dark">#8A8A8A</color>
+
+    <!-- 主色调：Windows 11 蓝色 -->
+    <color name="win_blue">#0078D4</color>
+    <color name="win_blue_hover">#106EBE</color>
+    <color name="win_blue_pressed">#005A9E</color>
+    <color name="win_blue_light">#DEECF9</color>
+
+    <!-- 功能色 -->
+    <color name="success">#107C10</color>
+    <color name="success_light">#DFF6DD</color>
+    <color name="danger">#C42B1C</color>
+    <color name="danger_light">#FDE7E9</color>
+    <color name="warning">#F7630C</color>
+    <color name="warning_light">#FFF4CE</color>
+
+    <!-- 预览区域色 -->
+    <color name="camera_preview_bg">#1A1A1A</color>
+    <color name="camera_preview_border">#E1E1E1</color>
+
+    <!-- 状态指示灯 -->
+    <color name="status_on">#107C10</color>
+    <color name="status_off">#A80000</color>
+    <color name="status_neutral">#8A8A8A</color>
+</resources>

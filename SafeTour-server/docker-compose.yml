@@ -1,0 +1,20 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: SafeTour-server
+    # host网络模式
+    network_mode: "host"
+    # host模式不需要ports映射，直接注释/删掉
+    # ports:
+    #   - "21121:21121"
+    restart: unless-stopped
+    volumes:
+      # 将任务数据持久化到宿主机，避免容器重建丢失数据
+      - ./app/tasks:/app/app/tasks
+      - ./app/users.json:/app/app/users.json
+      - ./app/tasks.json:/app/app/tasks.json
+      - ./app/qq_push_config.json:/app/app/qq_push_config.json
+    environment:
+      - TZ=Asia/Shanghai

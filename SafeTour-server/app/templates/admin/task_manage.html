@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理 - 安途-SafeTour</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 50%, #fce7f3 100%);
+            min-height: 100vh;
+        }
+        .container { display: flex; min-height: 100vh; }
+        /* 左侧菜单 */
+        .sidebar {
+            width: 240px;
+            background: rgba(30, 41, 59, 0.92);
+            backdrop-filter: blur(16px);
+            color: white;
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 24px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 16px;
+        }
+        .brand-logo {
+            width: 44px; height: 44px; border-radius: 12px; overflow: hidden;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+        }
+        .brand-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; background: #fff; }
+        .brand-text { font-size: 17px; font-weight: 700; letter-spacing: 0.5px; }
+        .brand-text small { display: block; font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.5); margin-top: 2px; letter-spacing: 1.5px; }
+        .nav-list { flex: 1; padding: 0 12px; }
+        .sidebar a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; color: rgba(255,255,255,0.8); text-decoration: none;
+            transition: all 0.3s ease; border-radius: 12px; margin-bottom: 4px; font-size: 14px;
+        }
+        .sidebar a:hover { background: rgba(255,255,255,0.08); color: #fff; transform: translateX(4px); }
+        .sidebar a::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+        .sidebar a:hover::before { background: #10b981; }
+        .sidebar a.active {
+            background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(168,85,247,0.4));
+            color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+        }
+        .sidebar a.active::before { background: #10b981; box-shadow: 0 0 8px #10b981; }
+        .sidebar .logout { margin-top: auto; padding: 0 12px; }
+        .sidebar .logout a { color: #f87171; background: rgba(248,113,113,0.1); justify-content: center; }
+        .sidebar .logout a:hover { background: rgba(248,113,113,0.2); color: #fca5a5; }
+        /* 右侧内容 */
+        .content { flex: 1; padding: 40px; overflow-y: auto; }
+        .content h2 { color: #1e293b; font-size: 28px; margin-bottom: 8px; font-weight: 700; }
+        .content .subtitle { color: #64748b; font-size: 15px; margin-bottom: 28px; }
+        /* 表格卡片 */
+        .table-card {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(12px);
+            padding: 28px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(99,102,241,0.08);
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+        .table-card h3 { color: #1e293b; font-size: 18px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        th { background: linear-gradient(135deg, #f8fafc, #f1f5f9); color: #475569; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; }
+        tbody tr { transition: background 0.2s ease; }
+        tbody tr:hover { background: rgba(99,102,241,0.04); }
+        .member-cell { max-width: 500px; }
+        .member-item { padding: 6px 0; border-bottom: 1px dashed #e2e8f0; color: #475569; font-size: 13px; }
+        .member-item:last-child { border-bottom: none; }
+        .member-item strong { color: #1e293b; font-weight: 600; margin-right: 4px; }
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px; border: none; border-radius: 10px; font-size: 13px;
+            cursor: pointer; text-decoration: none; display: inline-block; margin-right: 6px;
+            font-weight: 500; transition: all 0.2s ease;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .btn-danger:hover { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .btn-success:hover { background: linear-gradient(135deg, #059669, #047857); }
+        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .btn-warning:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+        /* 任务状态 */
+        .status { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-running { background: rgba(16,185,129,0.1); color: #059669; }
+        .status-running .status-dot { background-color: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 2s ease-in-out infinite; }
+        .status-stopped { background: rgba(239,68,68,0.1); color: #dc2626; }
+        .status-stopped .status-dot { background-color: #ef4444; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        /* 提示框 */
+        .alert { padding: 14px 20px; margin-bottom: 20px; border-radius: 14px; display: none; font-size: 14px; font-weight: 500; border-left: 4px solid; }
+        .alert-success { background: rgba(16,185,129,0.1); color: #065f46; border-left-color: #10b981; }
+        .alert-error { background: rgba(239,68,68,0.1); color: #991b1b; border-left-color: #ef4444; }
+        /* 空状态 */
+        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+        .empty-state .emoji { font-size: 48px; margin-bottom: 12px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧菜单 -->
+        <div class="sidebar">
+            <div class="brand">
+                <div class="brand-logo"><img src="/logo.png" alt="Logo"></div>
+                <div class="brand-text">安途-SafeTour<small>管 理 后 台</small></div>
+            </div>
+            <div class="nav-list">
+                <a href="/admin/user_manage">用户管理</a>
+                <a href="/admin/task_create">创建任务</a>
+                <a href="/admin/task_auth">任务权限</a>
+                <a href="/admin/task_manage" class="active">任务管理</a>
+                <a href="/admin/qq_push">QQ推送管理</a>
+                <a href="/admin/about">关于</a>
+            </div>
+            <div class="logout">
+                <a href="/admin/logout">退出登录</a>
+            </div>
+        </div>
+        <!-- 右侧内容 -->
+        <div class="content">
+            <h2>任务管理</h2>
+            <div class="subtitle">查看和管理系统中的所有任务</div>
+            
+            <div id="alert" class="alert"></div>
+
+            <div class="table-card">
+                <h3>任务列表</h3>
+                {% if tasks %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>任务ID</th>
+                            <th>状态</th>
+                            <th>参与人数</th>
+                            <th>成员信息</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr id="task-{{ task.id }}">
+                            <td><strong>{{ task.id }}</strong></td>
+                            <td>
+                                <div class="status {{ 'status-running' if task.status == 'running' else 'status-stopped' }}">
+                                    <span class="status-dot"></span>
+                                    <span>{{ '运行中' if task.status == 'running' else '已停止' }}</span>
+                                </div>
+                            </td>
+                            <td>{{ task.participant_count }} 人</td>
+                            <td class="member-cell">
+                                {% for member in task.member_list %}
+                                <div class="member-item">
+                                    <strong>姓名：</strong>{{ member.name }} |
+                                    <strong>UUID：</strong>{{ member.uuid }}
+                                </div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <button class="btn {{ 'btn-warning' if task.status == 'running' else 'btn-success' }}" onclick="toggleTaskStatus('{{ task.id }}', '{{ task.status }}')">
+                                    {{ '暂停' if task.status == 'running' else '启动' }}
+                                </button>
+                                <button class="btn btn-danger" data-id="{{ task.id }}">删除</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <span class="emoji">📋</span>
+                    暂无任务，请先创建任务
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 显示提示框
+        function showAlert(message, isSuccess) {
+            const alert = document.getElementById("alert");
+            alert.textContent = message;
+            alert.className = "alert " + (isSuccess ? "alert-success" : "alert-error");
+            alert.style.display = "block";
+            setTimeout(() => {
+                alert.style.display = "none";
+            }, 3000);
+        }
+
+        // 删除任务
+        document.querySelectorAll(".btn-danger").forEach(btn => {
+            btn.addEventListener("click", function() {
+                if (!confirm("确定要删除该任务吗？（会删除任务文件夹及所有数据/图片）")) {
+                    return;
+                }
+                const taskId = this.getAttribute("data-id");
+                const formData = new FormData();
+                formData.append("task_id", taskId);
+                
+                fetch("/admin/task_manage", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showAlert(data.msg, data.success);
+                    if (data.success) {
+                        // 删除表格行
+                        document.getElementById("task-" + taskId).remove();
+                    }
+                })
+                .catch(error => {
+                    showAlert("请求失败：" + error, false);
+                });
+            });
+        });
+
+        // 切换任务状态
+        function toggleTaskStatus(taskId, currentStatus) {
+            const newStatus = currentStatus === 'running' ? 'stopped' : 'running';
+            
+            fetch("/admin/task_status", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: "task_id=" + encodeURIComponent(taskId) + "&status=" + encodeURIComponent(newStatus)
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.msg, data.success);
+                if (data.success) {
+                    // 刷新页面以更新状态
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                showAlert("请求失败：" + error, false);
+            });
+        }
+    </script>
+</body>
+</html>

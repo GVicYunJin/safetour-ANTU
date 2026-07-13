@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "api_url": "http://127.0.0.1:54321/send_group_msg",
+  "token": "xxxxxx",
+  "default_group": "0000000000",
+  "task_groups": {
+  }
+}

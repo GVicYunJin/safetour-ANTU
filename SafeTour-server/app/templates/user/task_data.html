@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- ========== 高德地图 API 配置（修改这里即可更换 Key） ========== -->
+    <script type="text/javascript">
+        // ↓↓↓ 在这里修改你的高德地图 Key 和密钥 ↓↓↓
+        const AMAP_KEY = '请在这里填写你的高德地图Key';
+        const AMAP_SECURITY_CODE = '请在这里填写你的高德地图密钥';
+        // ↑↑↑ 在这里修改你的高德地图 Key 和密钥 ↑↑↑
+        window._AMapSecurityConfig = {
+            securityJsCode: AMAP_SECURITY_CODE
+        };
+        // 动态加载高德地图脚本
+        const _amapScript = document.createElement('script');
+        _amapScript.src = 'https://webapi.amap.com/maps?v=2.0&key=' + AMAP_KEY;
+        document.head.appendChild(_amapScript);
+    </script>
+    <!-- ========== 高德地图 API 配置结束 ========== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>任务数据 - 安途-SafeTour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366F1',
+                        secondary: '#F59E0B',
+                        accent: '#10B981'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #ecfdf5 0%, #eff6ff 100%);
+        }
+        .container { width: 100%; margin: 0; padding: 20px; }
+
+        /* 顶部导航（磨砂玻璃） */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .brand-area { display: flex; align-items: center; gap: 14px; }
+        .logo-img {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: linear-gradient(135deg, #10b981, #6366f1);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
+        }
+        .logo-img img { width: 100%; height: 100%; object-fit: contain; padding: 4px; background: #fff; border-radius: 10px; }
+        .brand-title { font-size: 18px; font-weight: 700; color: #0f172a; letter-spacing: 0.5px; }
+        .brand-title small { display: block; font-size: 12px; color: #475569; font-weight: 500; letter-spacing: 1px; margin-top: 2px; }
+        .header h1 { color: #0f172a; font-size: 20px; font-weight: 700; }
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3); }
+
+        /* 任务信息（板块：信息） */
+        .task-info {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 24px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .task-info h2 {
+            font-size: 18px;
+            color: #0f172a;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #6366F1;
+            display: inline-block;
+            font-weight: 700;
+        }
+        .task-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border-left: 4px solid #6366F1;
+            border-radius: 4px;
+        }
+        .info-item {
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 12px;
+            padding: 10px 14px;
+            border-left: 4px solid #6366F1;
+        }
+        .info-item .label {
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .info-item .value {
+            font-size: 15px;
+            color: #0f172a;
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .info-item.auth .value {
+            font-size: 13px;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        /* 实时信息板块 */
+        .realtime-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 24px;
+            border-radius: 20px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 24px rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .realtime-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            justify-content: flex-start;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            padding-bottom: 10px;
+        }
+        .realtime-card h2 {
+            font-size: 18px;
+            color: #0f172a;
+            margin: 0;
+            padding: 0;
+            border-bottom: 3px solid #10B981;
+            padding-bottom: 6px;
+            display: inline-block;
+            font-weight: 700;
+        }
+        /* 当前时间：缩小并放在标题同一行右侧 */
+        .current-time-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.08);
+            border-radius: 12px;
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+        .current-time-inline .ct-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .current-time-inline .ct-value {
+            font-size: 13px;
+            color: #0f172a;
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+        }
+        .realtime-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .member-mini-card {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: linear-gradient(to right, #fafbff 0%, #ffffff 60%);
+            transition: box-shadow 0.2s;
+        }
+        .member-mini-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .member-status-col {
+            flex-shrink: 0;
+            width: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding-right: 16px;
+            border-right: 1px solid #e5e7eb;
+        }
+        .member-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1f2937;
+            text-align: center;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-badge.offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-badge.online .dot {
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        .status-badge.offline .dot {
+            background: #ef4444;
+        }
+        .member-data-col {
+            flex: 1;
+            min-width: 0;
+            padding-left: 18px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px 18px;
+        }
+        .mini-field {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .mini-field .label {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        .mini-field .val {
+            font-size: 13px;
+            color: #1f2937;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .mini-field .val.empty {
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        /* 滚动条隐藏工具类（标准示例复用） */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scroll-container { width: 100%; height: 100%; overflow: auto; }
+
+        /* 核心合并表格外层容器 */
+        .merged-table-wrap {
+            width: 100%;
+            height: 620px;
+            display: flex;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+        /* 左侧固定时间序号列：双容器，顶部固定头部，底部滚动区域 */
+        /* 左侧固定时间序号列：双容器，顶部固定头部，底部滚动区域 */
+        .time-side {
+            width: 5vw;
+            min-width: 120px;
+            flex-shrink: 0;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* 右侧所有成员横向均分容器 */
+        .members-row-wrap {
+            flex: 1;
+            display: flex;
+            min-width: 0;
+            overflow: hidden;
+        }
+        /* 单个成员区块：双容器，顶部固定成员名头部，底部滚动区域 */
+        .member-block {
+            flex: 1 1 0;
+            min-width: 0;
+            width: 0;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .member-block:last-child { border-right: none; }
+
+        /* 固定头部容器（第一行：橙色成员名/采集时间，不随横向/竖向滚动移动） */
+        .member-name-header {
+            flex-shrink: 0;
+            width: 100%;
+            overflow: hidden;
+        }
+        .member-name-header table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+        .member-name-header th {
+            background: #F59E0B;
+            color: #fff;
+            padding: 10px 6px;
+            font-weight: 600;
+            font-size: 12px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* 滚动区域容器（第二行表头+数据，可横向竖向滚动） */
+        .member-scroll-area {
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+            min-width: 0;
+        }
+
+        /* 表格通用样式：至少撑满父容器宽度，字段内容多时可超出宽度由父容器滚动 */
+        .sync-table {
+            min-width: 100%;
+            width: auto;
+            border-collapse: collapse;
+            font-size: 13px;
+            table-layout: auto;
+        }
+        .sync-table th,
+        .sync-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+        /* 固定表头（滚动区域内只有第二行绿色字段名） */
+        .sync-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+            background: #10B981;
+            color: #fff;
+        }
+        .sync-table .field-th { background: #10B981; color: #fff; }
+
+        /* 时间单元格样式 */
+        .time-cell {
+            background: #fff;
+        }
+        .time-cell .date {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        .time-cell .time {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* 状态圆点 */
+        .status-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            display: inline-block;
+            padding: 0;
+            margin: 0;
+            vertical-align: middle;
+            line-height: 0;
+        }
+        .status-dot.has-data { background: #28a745; }
+        .status-dot.no-data { background: #dc3545; }
+
+        /* 空数据/加载提示 */
+        .loading, td.no-data, .error {
+            text-align: center;
+            padding: 60px 0;
+            color: #6c757d;
+        }
+        .error { color: #dc3545; }
+
+        /* 图片模块样式（保留原有） */
+        .photo-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 100%;
+            margin-top: 30px;
+        }
+        .photo-card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        /* 每个成员的照片卡片容器：覆盖 Tailwind 的 overflow-hidden，让横向滚动条可见 */
+        .member-card {
+            overflow: visible !important;
+        }
+        .photo-container {
+            position: relative;
+            padding: 10px 0;
+        }
+        .photo-scroll {
+            display: flex;
+            gap: 15px;
+            padding: 10px;
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+        .photo-scroll::-webkit-scrollbar {
+            height: 10px;
+        }
+        .photo-scroll::-webkit-scrollbar-track {
+            background: #f1f3f5;
+            border-radius: 5px;
+        }
+        .photo-scroll::-webkit-scrollbar-thumb {
+            background: #adb5bd;
+            border-radius: 5px;
+        }
+        .photo-scroll::-webkit-scrollbar-thumb:hover {
+            background: #868e96;
+        }
+        .photo-item {
+            flex: 0 0 auto;
+            width: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+            background: white;
+        }
+        .photo-item:hover { transform: scale(1.05); }
+        .photo-time {
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .photo-time .date {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+        .photo-time .time {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .photo-image {
+            width: 100%;
+            overflow: hidden;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+        .photo-image img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        /* 图片弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+        }
+        .modal-content {
+            position: relative;
+            margin: 10% auto;
+            max-width: 90%;
+            max-height: 80%;
+        }
+        .modal-content img {
+            width: 100%;
+            height: auto;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            color: #f1f1f1;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .close:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        /* 视图切换按钮 */
+        .view-toggle {
+            display: inline-flex;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-left: 16px;
+            vertical-align: middle;
+        }
+        .view-toggle button {
+            padding: 8px 16px;
+            border: none;
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            color: #495057;
+            transition: all 0.2s;
+        }
+        .view-toggle button.active {
+            background: #6366F1;
+            color: #fff;
+        }
+        .view-toggle button:hover:not(.active) {
+            background: #f1f3f5;
+        }
+
+        /* 普通视图（一人一表） */
+        .plain-member-card {
+            margin-bottom: 24px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .plain-member-card:last-child { margin-bottom: 0; }
+        .plain-member-header {
+            background: #F59E0B;
+            color: #fff;
+            padding: 12px 16px;
+            font-weight: 600;
+        }
+        .plain-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .plain-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: max-content;
+            table-layout: fixed;
+        }
+        /* 统一各成员表格列宽，保证横向同步对齐 */
+        .plain-table col.col-time   { width: 160px; }
+        .plain-table col.col-status { width: 90px; }
+        .plain-table col.col-field  { width: 160px; }
+        .plain-table thead th {
+            position: sticky;
+            top: 0;
+            background: #10B981;
+            color: #fff;
+            padding: 10px 8px;
+            white-space: nowrap;
+            text-align: left;
+        }
+        /* 普通视图：采集时间列横向滚动时固定在左侧 */
+        .plain-table thead th.col-time-sticky {
+            left: 0;
+            z-index: 20;
+            background: #10B981;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+        }
+        .plain-table tbody td.col-time-sticky {
+            position: sticky;
+            left: 0;
+            z-index: 15;
+            background: #fff;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+        }
+        .plain-table tbody tr:nth-child(even) td.col-time-sticky {
+            background: #f8f9fa;
+        }
+        .plain-table tbody td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .plain-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .plain-table .has-data-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+        /* 时间轴地图模块样式 */
+        .track-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .track-card h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+        #trackMapContainer {
+            width: 100%;
+            height: 520px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        /* ========== 时间轴轨迹回溯：Canvas 交互时间轴面板 ========== */
+        .track-time-panel {
+            width: 100%;
+            padding: 16px 20px 18px 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        .track-time-display {
+            height: 48px;
+            border: 2px solid #4f46e5;
+            border-radius: 10px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+        .timeline-wrapper {
+            position: relative;
+            height: 200px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            touch-action: none;
+        }
+        .timeline-wrapper canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .timeline-center-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 100%;
+            background: #e11d48;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .timeline-toolbar {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .timeline-btn {
+            border: 1px solid #4f46e5;
+            color: #4f46e5;
+            background: #ffffff;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .timeline-btn:hover {
+            background: #4f46e5;
+            color: #ffffff;
+        }
+        .timeline-info {
+            margin-left: auto;
+            font-size: 13px;
+            color: #374151;
+        }
+        .track-info {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        .member-legend {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .member-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #333;
+            padding: 4px 10px;
+            background: #fff;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .member-color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="brand-area">
+                <div class="logo-img"><img src="/logo.png" alt="Logo"></div>
+                <div>
+                    <div class="brand-title">安途-SafeTour</div>
+                </div>
+            </div>
+            <h1>📋 任务数据详情</h1>
+            <a href="/user/menu" class="btn">← 返回菜单</a>
+        </div>
+
+        <!-- 板块一：信息 -->
+        <div class="task-info">
+            <h2>信息</h2>
+            <div class="task-info-grid" id="taskInfoGrid">
+                <div class="info-item">
+                    <span class="label">任务ID</span>
+                    <span class="value" id="taskId">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">任务名称</span>
+                    <span class="value" id="taskName">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">参与人数</span>
+                    <span class="value" id="participantCount">-</span>
+                </div>
+                <div class="info-item auth">
+                    <span class="label">授权用户</span>
+                    <span class="value" id="authUsers">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 板块二：实时信息 -->
+        <div class="realtime-card">
+            <div class="realtime-header">
+                <h2>实时信息</h2>
+                <div class="current-time-inline">
+                    <span class="ct-label">当前时间</span>
+                    <span class="ct-value" id="currentTimeVal">加载中...</span>
+                </div>
+            </div>
+            <div class="realtime-list" id="realtimeList">
+                <div class="loading" style="text-align:center;padding:30px 0;color:#6c757d;">加载中...</div>
+            </div>
+        </div>
+
+        <!-- ========== 时间轴轨迹回溯模块（高德API + Canvas 交互时间轴）========== -->
+        <div class="track-card">
+            <h2>时间轴轨迹回溯</h2>
+            <div id="trackMapContainer"><div class="loading">地图加载中...</div></div>
+            <div class="track-time-panel">
+                <div class="track-time-display" id="trackCurrentTime">加载中...</div>
+                <div class="timeline-wrapper" id="trackTimelineWrapper">
+                    <canvas id="trackTimelineCanvas"></canvas>
+                    <div class="timeline-center-line"></div>
+                </div>
+                <div class="timeline-toolbar">
+                    <button class="timeline-btn" id="trackZoomIn">放大</button>
+                    <button class="timeline-btn" id="trackZoomOut">缩小</button>
+                    <div class="member-legend" id="trackMemberLegend"></div>
+                    <div class="timeline-info">当前级别：<span id="trackScaleText">-</span></div>
+                </div>
+                <div class="track-info">拖动时间轴 / 使用放大缩小按钮 查看指定时间点的所有成员定位位置，点击地图标点可查看详细信息</div>
+            </div>
+        </div>
+
+        <div class="data-card bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl text-slate-800 mb-4" style="display:inline-block">任务数据</h2>
+            <div class="view-toggle">
+                <button id="btnSync" class="active" onclick="switchView('sync')">联动</button>
+                <button id="btnPlain" onclick="switchView('plain')">普通</button>
+            </div>
+            <div id="dataDisplay" class="loading" style="margin-top:16px;">加载中...</div>
+        </div>
+
+        <div class="photo-card">
+            <h2>图片</h2>
+            <div class="photo-container" id="photoDisplay">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <div id="imageModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <img id="modalImage" src="" alt="预览图片">
+            </div>
+        </div>
+    </div>
+
+    <!-- 高德地图 API 已在文件顶部配置 -->
+    <script>
+        // 获取url任务id
+        function getTaskIdFromUrl() {
+            const pathParts = window.location.pathname.split('/');
+            return decodeURIComponent(pathParts[pathParts.length - 1]);
+        }
+
+        // ========== 时间轴轨迹回溯（高德API）==========
+        // 成员配色（支持多成员同时显示，不同颜色区分）
+        const MEMBER_COLORS = [
+            '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA',
+            '#00ACC1', '#F4511E', '#546E7A', '#7CB342', '#D81B60',
+            '#3949AB', '#00897B', '#EF6C00', '#6D4C41', '#558B2F'
+        ];
+        let trackMap = null;
+        let trackMemberMap = {};         // { uuid: { marker, infoWindow, polyline, validData, color, name } }
+        let trackAllTimestamps = [];     // 所有成员合并后的时间点数组（升序）
+        let trackCachedTaskId = null;
+        let trackCachedResData = null;
+
+        // ========== Canvas 交互时间轴：拖动、缩放、联动地图 ==========
+        const TRACK_MINUTE = 60000;
+        const trackZoomLevels = [
+            { name: '1分钟',  minuteWidth: 90,  majorStep: 1 },
+            { name: '5分钟',  minuteWidth: 18,  majorStep: 5 },
+            { name: '10分钟', minuteWidth: 9,   majorStep: 10 },
+            { name: '30分钟', minuteWidth: 3,   majorStep: 30 },
+            { name: '1小时',  minuteWidth: 1.5, majorStep: 60 }
+        ];
+        let trackZoomIndex = 0;
+        let trackCenterTime = 0;
+        let trackTimelineMin = 0;
+        let trackTimelineMax = 0;
+        let trackTimelineDisabled = true;
+
+        let trackCanvas = null;
+        let trackCtx = null;
+        let trackWrapper = null;
+        let trackTimeDisplay = null;
+        let trackScaleText = null;
+
+        let trackDragging = false;
+        let trackLastX = 0;
+        let trackLastMoveTime = 0;
+        let trackVelocity = 0;
+        let trackAnimationId = null;
+
+        function trackInitDomOnce() {
+            if (trackWrapper) return;
+            trackCanvas = document.getElementById('trackTimelineCanvas');
+            trackCtx = trackCanvas ? trackCanvas.getContext('2d') : null;
+            trackWrapper = document.getElementById('trackTimelineWrapper');
+            trackTimeDisplay = document.getElementById('trackCurrentTime');
+            trackScaleText = document.getElementById('trackScaleText');
+            if (!trackWrapper || !trackCanvas) return;
+
+            trackWrapper.addEventListener('pointerdown', function (e) {
+                if (trackTimelineDisabled) return;
+                trackDragging = true;
+                if (trackAnimationId) cancelAnimationFrame(trackAnimationId);
+                trackVelocity = 0;
+                trackLastX = e.clientX;
+                trackLastMoveTime = performance.now();
+                try { trackWrapper.setPointerCapture(e.pointerId); } catch (err) {}
+            });
+            trackWrapper.addEventListener('pointermove', function (e) {
+                if (!trackDragging) return;
+                const now = performance.now();
+                const dx = e.clientX - trackLastX;
+                const dt = now - trackLastMoveTime;
+                trackVelocity = dx / Math.max(dt, 1);
+                trackLastX = e.clientX;
+                trackLastMoveTime = now;
+                trackMoveByPixels(dx);
+            });
+            function trackRelease() {
+                if (!trackDragging) return;
+                trackDragging = false;
+                trackStartInertia();
+            }
+            trackWrapper.addEventListener('pointerup', trackRelease);
+            trackWrapper.addEventListener('pointercancel', trackRelease);
+            trackWrapper.addEventListener('pointerleave', trackRelease);
+
+            const zoomInBtn = document.getElementById('trackZoomIn');
+            const zoomOutBtn = document.getElementById('trackZoomOut');
+            if (zoomInBtn) zoomInBtn.addEventListener('click', function () {
+                if (trackZoomIndex > 0) { trackZoomIndex--; trackUpdateUI(); trackDraw(); }
+            });
+            if (zoomOutBtn) zoomOutBtn.addEventListener('click', function () {
+                if (trackZoomIndex < trackZoomLevels.length - 1) { trackZoomIndex++; trackUpdateUI(); trackDraw(); }
+            });
+
+            trackResize();
+            window.addEventListener('resize', trackResize);
+        }
+
+        function trackResize() {
+            if (!trackCanvas || !trackWrapper) return;
+            const dpr = window.devicePixelRatio || 1;
+            trackCanvas.width = trackWrapper.clientWidth * dpr;
+            trackCanvas.height = trackWrapper.clientHeight * dpr;
+            trackCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            trackDraw();
+        }
+
+        function trackFormatTimeText(ts) {
+            const d = new Date(ts);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+        }
+
+        function trackUpdateUI() {
+            if (trackTimeDisplay) trackTimeDisplay.textContent = trackFormatTimeText(trackCenterTime);
+            if (trackScaleText) trackScaleText.textContent = trackZoomLevels[trackZoomIndex].name;
+        }
+
+        function trackClampTime(ts) {
+            if (trackTimelineMin > 0 && ts < trackTimelineMin) return trackTimelineMin;
+            if (trackTimelineMax > 0 && ts > trackTimelineMax) return trackTimelineMax;
+            return ts;
+        }
+
+        function trackSetCenterTime(ts) {
+            if (trackTimelineDisabled) return;
+            ts = trackClampTime(ts);
+            trackCenterTime = ts;
+            trackUpdateUI();
+            trackDraw();
+            trackRenderMapByTime(ts);
+        }
+
+        function trackDraw() {
+            if (!trackCtx || !trackWrapper) return;
+            const width = trackWrapper.clientWidth;
+            const height = trackWrapper.clientHeight;
+            trackCtx.clearRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const config = trackZoomLevels[trackZoomIndex];
+            const pxPerMinute = config.minuteWidth;
+            const totalMinutes = Math.ceil(width / pxPerMinute) + 20;
+            const currentMinute = Math.floor(trackCenterTime / TRACK_MINUTE);
+
+            // 顶部数据点竖线（采集点可视化）
+            if (trackAllTimestamps.length > 0) {
+                trackCtx.strokeStyle = '#4f46e5';
+                trackCtx.lineWidth = 1;
+                trackCtx.beginPath();
+                trackAllTimestamps.forEach(function (ts) {
+                    const ms = new Date(ts).getTime();
+                    const deltaMin = (ms - trackCenterTime) / TRACK_MINUTE;
+                    const x = centerX + deltaMin * pxPerMinute;
+                    if (x < -10 || x > width + 10) return;
+                    trackCtx.moveTo(x, 8);
+                    trackCtx.lineTo(x, 38);
+                });
+                trackCtx.stroke();
+            }
+
+            // 分钟刻度 + 标签
+            for (let i = -totalMinutes; i <= totalMinutes; i++) {
+                const minuteIndex = currentMinute + i;
+                const ts = minuteIndex * TRACK_MINUTE;
+                const x = centerX + i * pxPerMinute;
+                if (x < -60 || x > width + 60) continue;
+
+                const date = new Date(ts);
+                const minute = date.getMinutes();
+                const hour = date.getHours();
+
+                let tickHeight = 20;
+                let color = '#6b7280';
+                let showLabel = false;
+
+                if (minute === 0) {
+                    tickHeight = 70; color = '#1f2937'; showLabel = true;
+                } else if (minute % config.majorStep === 0) {
+                    tickHeight = 50; color = '#4b5563'; showLabel = true;
+                } else if (trackZoomIndex === 0) {
+                    tickHeight = 30; color = '#9ca3af';
+                } else {
+                    continue;
+                }
+
+                trackCtx.beginPath();
+                trackCtx.strokeStyle = color;
+                trackCtx.lineWidth = 1;
+                trackCtx.moveTo(x, height - 70 - tickHeight);
+                trackCtx.lineTo(x, height - 70);
+                trackCtx.stroke();
+
+                if (showLabel) {
+                    trackCtx.fillStyle = '#4b5563';
+                    trackCtx.font = '13px sans-serif';
+                    trackCtx.textAlign = 'center';
+                    const label = String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+                    trackCtx.fillText(label, x, height - 40);
+                }
+            }
+        }
+
+        function trackMoveByPixels(dx) {
+            const pxPerMinute = trackZoomLevels[trackZoomIndex].minuteWidth;
+            const deltaTime = (dx / pxPerMinute) * TRACK_MINUTE;
+            trackSetCenterTime(trackCenterTime - deltaTime);
+        }
+
+        function trackStartInertia() {
+            if (trackAnimationId) cancelAnimationFrame(trackAnimationId);
+            function frame() {
+                trackVelocity *= 0.95;
+                if (Math.abs(trackVelocity) < 0.02) {
+                    if (trackZoomIndex === 0) trackSnapMinute();
+                    return;
+                }
+                trackMoveByPixels(trackVelocity * 16);
+                trackAnimationId = requestAnimationFrame(frame);
+            }
+            frame();
+        }
+
+        function trackSnapMinute() {
+            const target = Math.round(trackCenterTime / TRACK_MINUTE) * TRACK_MINUTE;
+            trackSmoothTo(target);
+        }
+
+        function trackSmoothTo(target) {
+            if (trackAnimationId) cancelAnimationFrame(trackAnimationId);
+            function frame() {
+                const diff = target - trackCenterTime;
+                if (Math.abs(diff) < 100) { trackSetCenterTime(target); return; }
+                trackCenterTime += diff * 0.15;
+                trackCenterTime = trackClampTime(trackCenterTime);
+                trackUpdateUI(); trackDraw();
+                trackRenderMapByTime(trackCenterTime);
+                trackAnimationId = requestAnimationFrame(frame);
+            }
+            frame();
+        }
+
+        // 由时间戳 -> 在 trackAllTimestamps 中找最近一条 -> 渲染地图各成员标点
+        function trackRenderMapByTime(tsMs) {
+            if (!trackAllTimestamps || trackAllTimestamps.length === 0) return;
+            let lo = 0, hi = trackAllTimestamps.length - 1, idx = -1;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                const midMs = new Date(trackAllTimestamps[mid]).getTime();
+                if (midMs <= tsMs) { idx = mid; lo = mid + 1; }
+                else { hi = mid - 1; }
+            }
+            if (idx < 0) idx = 0;
+            renderTrackByIndex(idx);
+        }
+        // ========== （时间轴逻辑结束） ==========
+
+        // WGS84 转 GCJ02（高德坐标系）
+        const pi_gcj = 3.14159265358979324;
+        const a_gcj = 6378245.0;
+        const ee_gcj = 0.00669342162296594323;
+        function gcjTransformLat(x, y) {
+            let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+            ret += (20.0 * Math.sin(6.0 * x * pi_gcj) + 20.0 * Math.sin(2.0 * x * pi_gcj)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(y * pi_gcj) + 40.0 * Math.sin(y / 3.0 * pi_gcj)) * 2.0 / 3.0;
+            ret += (160.0 * Math.sin(y / 12.0 * pi_gcj) + 320 * Math.sin(y / 30.0 * pi_gcj)) * 2.0 / 3.0;
+            return ret;
+        }
+        function gcjTransformLng(x, y) {
+            let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+            ret += (20.0 * Math.sin(6.0 * x * pi_gcj) + 20.0 * Math.sin(2.0 * x * pi_gcj)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(x * pi_gcj) + 40.0 * Math.sin(x / 3.0 * pi_gcj)) * 2.0 / 3.0;
+            ret += (150.0 * Math.sin(x / 12.0 * pi_gcj) + 300.0 * Math.sin(x / 30.0 * pi_gcj)) * 2.0 / 3.0;
+            return ret;
+        }
+        function wgs84ToGcj02(lng, lat) {
+            var dLat = gcjTransformLat(lng - 105.0, lat - 35.0);
+            var dLng = gcjTransformLng(lng - 105.0, lat - 35.0);
+            var radLat = lat / 180.0 * pi_gcj;
+            var magic = Math.sin(radLat);
+            magic = 1 - ee_gcj * magic * magic;
+            var sqrtMagic = Math.sqrt(magic);
+            dLat = (dLat * 180.0) / ((a_gcj * (1 - ee_gcj)) / (magic * sqrtMagic) * pi_gcj);
+            dLng = (dLng * 180.0) / (a_gcj / sqrtMagic * Math.cos(radLat) * pi_gcj);
+            return [lng + dLng, lat + dLat];
+        }
+
+        // 解析 "经纬度(东经,北纬)" 字段（格式："116.123,39.456"）
+        function parseLngLat(str) {
+            if (!str || !str.includes(',')) return null;
+            const parts = str.split(',').map(s => Number(s.trim()));
+            if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
+            return [parts[0], parts[1]];
+        }
+
+        // 格式化 ISO 时间字符串
+        function formatTimeText(ts) {
+            const d = new Date(ts);
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+        }
+
+        // 初始化时间轴地图
+        function initTrackMap(taskId, resData) {
+            // 防御：每次重建地图前先销毁旧实例并清空容器，避免重复堆叠
+            if (typeof trackMap !== 'undefined' && trackMap && typeof trackMap.destroy === 'function') {
+                try { trackMap.destroy(); } catch(e) {}
+            }
+            trackMap = null;
+            const mapContainer = document.getElementById('trackMapContainer');
+            if (mapContainer) mapContainer.innerHTML = '';
+            trackMemberMap = {};
+            trackAllTimestamps = [];
+            trackCachedTaskId = taskId;
+            trackCachedResData = resData;
+            const taskInfo = resData.taskInfo;
+            const memberList = taskInfo?.member_list || [];
+            const rawData = resData.data || {};
+
+            // 收集每个成员的有效定位数据（按时间升序）
+            let allPoints = [];
+            let membersWithData = [];
+            memberList.forEach((member, idx) => {
+                const uuid = member.uuid;
+                const list = rawData[uuid]?.data || [];
+                const valid = [];
+                list.forEach(row => {
+                    const pos = parseLngLat(row['经纬度(东经,北纬)']);
+                    if (pos && row['设备本地时间']) {
+                        valid.push({
+                            time: row['设备本地时间'],
+                            wgsLng: pos[0],
+                            wgsLat: pos[1],
+                            raw: row,
+                            gcj: wgs84ToGcj02(pos[0], pos[1])
+                        });
+                    }
+                });
+                valid.sort((a, b) => new Date(a.time) - new Date(b.time));
+                if (valid.length > 0) {
+                    const color = MEMBER_COLORS[idx % MEMBER_COLORS.length];
+                    trackMemberMap[uuid] = {
+                        name: member.name,
+                        idx: idx,
+                        color: color,
+                        validData: valid,
+                        marker: null,
+                        polyline: null,
+                        infoWindow: null
+                    };
+                    membersWithData.push(uuid);
+                    allPoints = allPoints.concat(valid);
+                }
+            });
+
+            const legendEl = document.getElementById('trackMemberLegend');
+
+            // 合并所有时间点（去重升序）
+            const tsSet = new Set();
+            allPoints.forEach(p => tsSet.add(p.time));
+            trackAllTimestamps = Array.from(tsSet).sort((a, b) => new Date(a) - new Date(b));
+
+            // 初始化时间轴 DOM（只做一次）
+            trackInitDomOnce();
+
+            if (membersWithData.length === 0) {
+                if (trackTimeDisplay) trackTimeDisplay.textContent = '无有效定位数据';
+                trackTimelineDisabled = true;
+                return;
+            }
+
+            // 时间轴范围 & 初始位置（第一条）
+            trackTimelineMin = new Date(trackAllTimestamps[0]).getTime();
+            trackTimelineMax = new Date(trackAllTimestamps[trackAllTimestamps.length - 1]).getTime();
+            trackCenterTime = trackTimelineMin;
+            trackZoomIndex = 1;     // 默认 5 分钟级别，观察更广范围
+            trackTimelineDisabled = false;
+
+            // 图例
+            let legendHtml = '';
+            Object.keys(trackMemberMap).forEach(uuid => {
+                const m = trackMemberMap[uuid];
+                legendHtml += `<div class="member-legend-item"><span class="member-color-dot" style="background:${m.color}"></span>${m.name}（${m.validData.length}条）</div>`;
+            });
+            if (legendEl) legendEl.innerHTML = legendHtml;
+
+            // 初始化地图（以第一个有效点为中心）
+            const firstPoint = allPoints[0];
+            trackMap = new AMap.Map('trackMapContainer', {
+                zoom: 16,
+                center: firstPoint.gcj,
+                resizeEnable: true
+            });
+
+            // 为每个成员创建：轨迹折线 + 标点 + 信息窗体
+            Object.keys(trackMemberMap).forEach(uuid => {
+                const m = trackMemberMap[uuid];
+                const path = m.validData.map(p => p.gcj);
+                m.polyline = new AMap.Polyline({
+                    path: path,
+                    strokeColor: m.color,
+                    strokeWeight: 4,
+                    strokeOpacity: 0.65,
+                    lineJoin: 'round',
+                    showDir: true
+                });
+                trackMap.add(m.polyline);
+                m.marker = new AMap.Marker({
+                    position: path[0],
+                    anchor: 'bottom-center',
+                    content: `<div style="width:28px;height:28px;border-radius:50%;background:${m.color};border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`
+                });
+                trackMap.add(m.marker);
+                m.infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -35) });
+                m.marker.on('click', () => {
+                    const info = buildTrackInfo(m);
+                    m.infoWindow.setContent(info);
+                    m.infoWindow.open(trackMap, m.marker.getPosition());
+                });
+            });
+
+            // 自适应显示所有轨迹
+            const allLngLats = Object.values(trackMemberMap).flatMap(m => m.validData.map(p => p.gcj));
+            if (allLngLats.length > 1) {
+                trackMap.setFitView(null, false, [60, 60, 60, 60]);
+            }
+
+            // 初始渲染：显示第一个时间点的成员位置 + 刷新时间轴 UI
+            trackUpdateUI();
+            trackDraw();
+            renderTrackByIndex(0);
+        }
+
+        // 根据时间轴索引渲染：找到每个成员在该时间点（或最接近）的位置
+        function renderTrackByIndex(idx) {
+            if (idx < 0 || idx >= trackAllTimestamps.length) return;
+            const currentTs = trackAllTimestamps[idx];
+            const timeText = document.getElementById('trackCurrentTime');
+            timeText.textContent = formatTimeText(currentTs);
+            const currentTsMs = new Date(currentTs).getTime();
+
+            // 为每个成员找到 <= currentTs 的最新有效点
+            let usedPositions = [];
+            Object.keys(trackMemberMap).forEach(uuid => {
+                const m = trackMemberMap[uuid];
+                let found = null;
+                for (let i = 0; i < m.validData.length; i++) {
+                    const pMs = new Date(m.validData[i].time).getTime();
+                    if (pMs <= currentTsMs) {
+                        found = m.validData[i];
+                    } else {
+                        break;
+                    }
+                }
+                if (found) {
+                    // 多成员标点位置微偏移，避免重叠
+                    let offset = [0, 0];
+                    for (const used of usedPositions) {
+                        if (Math.abs(used[0] - found.gcj[0]) < 0.0001 && Math.abs(used[1] - found.gcj[1]) < 0.0001) {
+                            offset[0] += 0.00008;
+                            offset[1] += 0.00006;
+                        }
+                    }
+                    const showPos = [found.gcj[0] + offset[0], found.gcj[1] + offset[1]];
+                    usedPositions.push(showPos);
+                    m.marker.setPosition(showPos);
+                    m.marker.show();
+                    m._lastShown = found;
+                } else {
+                    m.marker.hide();
+                    m._lastShown = null;
+                }
+            });
+        }
+
+        // 构建标点信息窗体内容（显示人物名称、时间、坐标等）
+        function buildTrackInfo(memberData) {
+            const item = memberData._lastShown;
+            if (!item) return '<div style="padding:10px;">暂无数据</div>';
+            const row = item.raw || {};
+            const wgsLng = item.wgsLng;
+            const wgsLat = item.wgsLat;
+            const gcjLng = item.gcj[0].toFixed(6);
+            const gcjLat = item.gcj[1].toFixed(6);
+            return `
+                <div style="padding:12px 14px;min-width:280px;font-size:13px;line-height:1.7;">
+                    <p style="font-size:14px;font-weight:600;margin-bottom:6px;color:${memberData.color};">${memberData.name}</p>
+                    <p><b>设备时间：</b>${item.time}</p>
+                    <p><b>WGS84 坐标：</b>${wgsLng}, ${wgsLat}</p>
+                    <p><b>GCJ02 坐标：</b>${gcjLng}, ${gcjLat}</p>
+                    <p><b>定位来源：</b>${row['定位来源'] || '-'}</p>
+                    <p><b>定位精度：</b>${row['定位精度'] || '-'}</p>
+                    <p><b>剩余电量：</b>${row['剩余电量百分比'] || '-'}%</p>
+                    <p><b>设备温度：</b>${row['设备温度'] || '-'}℃</p>
+                    <p><b>网络类型：</b>${row['网络类型'] || '-'}</p>
+                    <p><b>Wi-Fi：</b>${row['Wi-Fi 名称 (SSID)'] || '-'}</p>
+                    <p><b>基站 CID：</b>${row['CID'] || '-'}</p>
+                </div>`;
+        }
+
+        // 防抖（标准示例原版）
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), 10);
+            };
+        }
+
+        // 当前视图状态（默认联动）
+        let currentView = 'sync';
+        // 保存原始数据供切换时重用
+        let cachedMemberList = null;
+        let cachedAlignResult = null;
+
+        // 视图切换函数
+        function switchView(view) {
+            currentView = view;
+            document.getElementById('btnSync').classList.toggle('active', view === 'sync');
+            document.getElementById('btnPlain').classList.toggle('active', view === 'plain');
+            if (!cachedMemberList || !cachedAlignResult) return;
+            const displayWrap = document.getElementById('dataDisplay');
+            if (view === 'sync') {
+                displayWrap.innerHTML = buildSyncTableHtml(cachedMemberList, cachedAlignResult);
+                setTimeout(() => bindScrollSync(cachedMemberList), 120);
+            } else {
+                displayWrap.innerHTML = buildPlainTableHtml(cachedMemberList, cachedAlignResult);
+                setTimeout(() => bindPlainScrollSync(cachedMemberList), 120);
+            }
+        }
+
+        // 普通视图滚动联动：竖向 + 横向 双向同步
+        function bindPlainScrollSync(memberList) {
+            const domList = memberList.map(m => document.getElementById(`plainScroll_${m.uuid}`)).filter(Boolean);
+            if (domList.length === 0) return;
+            const syncFn = debounce(function(sourceDom) {
+                const topVal = sourceDom.scrollTop;
+                const leftVal = sourceDom.scrollLeft;
+                domList.forEach(dom => {
+                    if (dom !== sourceDom) {
+                        dom.scrollTop = topVal;
+                        dom.scrollLeft = leftVal;
+                    }
+                });
+            }, 10);
+            domList.forEach(dom => dom.addEventListener('scroll', () => syncFn(dom)));
+        }
+
+        // 普通视图：一人一表（使用全量时间点统一对齐，保证行一致、横向同步时列对齐）
+        function buildPlainTableHtml(memberList, alignResult) {
+            const { timeList, memberDataMap, fields } = alignResult;
+            // 构建统一的 colgroup（各成员表列宽完全一致，便于横向滚动同步）
+            let colgroupHtml = '<colgroup><col class="col-time"><col class="col-status">';
+            fields.forEach(() => colgroupHtml += '<col class="col-field">');
+            colgroupHtml += '</colgroup>';
+
+            let html = '<div class="plain-view">';
+            memberList.forEach((member, idx) => {
+                const uuid = member.uuid;
+                const rowDataList = memberDataMap[uuid] || {};
+                const ownCount = timeList.filter(t => rowDataList[t]).length;
+                html += `<div class="plain-member-card">`;
+                html += `<div class="plain-member-header">成员${idx+1}: ${member.name} &nbsp;&nbsp; <span style="font-size:12px;opacity:0.85;">共 ${ownCount} 条</span></div>`;
+                html += `<div class="plain-table-wrap plain-scroll-area" id="plainScroll_${uuid}"><table class="plain-table">${colgroupHtml}<thead><tr>`;
+                html += `<th class="col-time-sticky">采集时间</th><th>定位状态</th>`;
+                fields.forEach(f => html += `<th>${f}</th>`);
+                html += `</tr></thead><tbody>`;
+                if (timeList.length === 0) {
+                    html += `<tr><td colspan="${2 + fields.length}" style="text-align:center;padding:40px 0;color:#6c757d;">暂无采集数据</td></tr>`;
+                } else {
+                    // 使用全量时间点（所有成员的并集）逐行渲染，保证各成员表格行号对齐
+                    timeList.forEach(ts => {
+                        const rowData = rowDataList[ts];
+                        const d = new Date(ts);
+                        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                        const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+                        const hasData = rowData && rowData['经纬度(东经,北纬)']?.trim();
+                        if (!rowData) {
+                            // 无数据行：留空，保证行数与其他成员对齐
+                            html += `<tr style="opacity:0.55;"><td class="col-time-sticky">${dateStr} ${timeStr}</td><td style="text-align:center;"><span class="no-data-dot"></span></td>`;
+                            fields.forEach(() => html += `<td>-</td>`);
+                            html += `</tr>`;
+                        } else {
+                            html += `<tr><td class="col-time-sticky">${dateStr} ${timeStr}</td><td style="text-align:center;"><span class="${hasData ? 'has-data-dot' : 'no-data-dot'}"></span></td>`;
+                            fields.forEach(field => {
+                                let val = rowData?.[field] ?? '';
+                                if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+                                html += `<td>${val}</td>`;
+                            });
+                            html += `</tr>`;
+                        }
+                    });
+                }
+                html += '</tbody></table></div></div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        // 固定字段顺序
+        const FIELD_ORDER = [
+            '经纬度(东经,北纬)',
+            '定位精度',
+            '定位来源',
+            'MCC',
+            'MNC',
+            'LAC',
+            'CID',
+            '基站信号强度',
+            'Wi-Fi 名称 (SSID)',
+            'Wi-Fi MAC 地址 (BSSID)',
+            'Wi-Fi 信号强度',
+            '剩余电量百分比',
+            '是否充电中',
+            'GPS是否开启',
+            '网络类型',
+            '海拔高度',
+            '气压',
+            '速度',
+            '加速度(X,Y,Z)',
+            '设备温度'
+        ];
+
+        // 数据整合核心：全量时间戳统一，严格对齐每行
+        function alignAllMemberData(memberList, rawMemberData) {
+            // 1. 收集所有成员全部时间戳
+            const allTimeSet = new Set();
+            const memberTimeMap = {};
+
+            memberList.forEach(member => {
+                const uuid = member.uuid;
+                memberTimeMap[uuid] = {};
+                const list = rawMemberData[uuid]?.data || [];
+                list.forEach(row => {
+                    const ts = row['设备本地时间'];
+                    if (ts) {
+                        allTimeSet.add(ts);
+                        memberTimeMap[uuid][ts] = row;
+                    }
+                });
+            });
+
+            // 2. 时间戳按时间降序排序（最新采集的在最上面）
+            const sortedTimeList = Array.from(allTimeSet).sort((a, b) => new Date(b) - new Date(a));
+
+            return {
+                timeList: sortedTimeList,
+                memberDataMap: memberTimeMap,
+                fields: FIELD_ORDER
+            };
+        }
+
+        // 生成完整联动表格HTML
+        function buildSyncTableHtml(memberList, alignResult) {
+            const { timeList, memberDataMap, fields } = alignResult;
+            const memberTotal = memberList.length;
+            const fieldCount = fields.length;
+
+            // 外层容器
+            let html = `<div class="merged-table-wrap">`;
+
+            // ========== 左侧时间列：双容器（顶部固定头部+底部滚动区域）==========
+            html += `
+                <div class="time-side">
+                    <!-- 固定头部：橙色，不随横向/竖向滚动 -->
+                    <div class="member-name-header">
+                        <table><tr><th>采集时间</th></tr></table>
+                    </div>
+                    <!-- 滚动区域：绿色字段表头+数据行 -->
+                    <div class="member-scroll-area scroll-container scrollbar-hide" id="scrollTimeSide">
+                        <table class="sync-table">
+                            <thead>
+                                <tr><th class="field-th text-center">时间</th></tr>
+                            </thead>
+                            <tbody>
+            `;
+            timeList.forEach(ts => {
+                const d = new Date(ts);
+                const dateStr = `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日`;
+                const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+                html += `
+                    <tr>
+                        <td class="time-cell">
+                            <div class="date">${dateStr}</div>
+                            <div class="time">${timeStr}</div>
+                        </td>
+                    </tr>
+                `;
+            });
+            if (timeList.length === 0) {
+                html += `<tr><td class="no-data">暂无采集数据</td></tr>`;
+            }
+            html += `</tbody></table></div></div>`;
+
+            // ========== 右侧成员均分区块 ==========
+            html += `<div class="members-row-wrap">`;
+            memberList.forEach((member, idx) => {
+                const uuid = member.uuid;
+                // 固定头部(橙色)：单个合并列，成员名只显示一遍
+                const totalCols = fieldCount + 2;
+                html += `
+                    <div class="member-block">
+                        <!-- 固定头部：橙色，不随横向/竖向滚动 -->
+                        <div class="member-name-header">
+                            <table><tr><th colspan="${totalCols}">成员${idx+1}:${member.name}</th></tr></table>
+                        </div>
+                        <!-- 滚动区域：绿色字段表头+数据行 -->
+                        <div class="member-scroll-area scroll-container scrollbar-hide" id="scrollMemberBlock_${uuid}">
+                            <table class="sync-table">
+                                <thead>
+                                    <tr>
+                                        <th class="field-th">采集时间</th>
+                                        <th class="field-th">定位状态</th>
+                `;
+                fields.forEach(f => html += `<th class="field-th">${f}</th>`);
+                html += `</tr></thead><tbody>`;
+
+                // 逐行填充，严格对齐时间，无数据填空
+                timeList.forEach(ts => {
+                    const rowData = memberDataMap[uuid][ts];
+                    // 状态圆点
+                    let statusClass = 'no-data';
+                    if (rowData && rowData['经纬度(东经,北纬)']?.trim()) statusClass = 'has-data';
+
+                    // 格式化本成员行的采集时间
+                    const td = new Date(ts);
+                    const tDate = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
+                    const tTime = `${String(td.getHours()).padStart(2,'0')}:${String(td.getMinutes()).padStart(2,'0')}:${String(td.getSeconds()).padStart(2,'0')}`;
+
+                    html += `<tr><td class="time-cell"><div class="date">${tDate}</div><div class="time">${tTime}</div></td><td class="text-center"><span class="status-dot ${statusClass}"></span></td>`;
+                    // 所有字段填充
+                    fields.forEach(field => {
+                        let val = rowData?.[field] ?? '';
+                        if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+                        html += `<td>${val}</td>`;
+                    });
+                    html += `</tr>`;
+                });
+
+                if (timeList.length === 0) {
+                    html += `<tr><td colspan="${fieldCount+2}" class="no-data">无数据</td></tr>`;
+                }
+                html += `</tbody></table>
+                    </div>
+                </div>
+                `;
+            });
+            html += `</div></div>`;
+            return html;
+        }
+
+        // 初始化多区域滚动联动：竖向(时间列+成员块)联动 + 成员间横向(字段列)联动
+        function bindScrollSync(memberList) {
+            const timeDom = document.getElementById('scrollTimeSide');
+            const memberDomList = memberList.map(m => document.getElementById(`scrollMemberBlock_${m.uuid}`)).filter(Boolean);
+            const allScrollDom = [timeDom, ...memberDomList].filter(Boolean);
+            if (allScrollDom.length === 0) return;
+
+            const syncFn = debounce(function(sourceDom) {
+                const topVal = sourceDom.scrollTop;
+                const leftVal = sourceDom.scrollLeft;
+                // 1) 竖向：所有区域同步（时间列 + 所有成员块）
+                allScrollDom.forEach(dom => {
+                    if (dom !== sourceDom) dom.scrollTop = topVal;
+                });
+                // 2) 横向：仅成员块之间同步（字段列对齐翻动，不影响时间列）
+                if (sourceDom !== timeDom) {
+                    memberDomList.forEach(dom => {
+                        if (dom !== sourceDom) dom.scrollLeft = leftVal;
+                    });
+                }
+            }, 10);
+
+            // 全部绑定滚动事件
+            allScrollDom.forEach(dom => {
+                dom.addEventListener('scroll', () => syncFn(dom));
+            });
+        }
+
+        // ========== 实时信息渲染：每个成员一张小卡片 ==========
+        function renderRealtimeInfo(memberList, rawMemberData) {
+            const wrap = document.getElementById('realtimeList');
+            if (!wrap) return;
+            if (!memberList || memberList.length === 0) {
+                wrap.innerHTML = '<div class="no-data" style="text-align:center;padding:30px 0;color:#6c757d;">暂无成员数据</div>';
+                return;
+            }
+
+            const now = new Date();
+            // 五分钟（300秒）阈值
+            const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
+            let html = '';
+            memberList.forEach((member, idx) => {
+                const uuid = member.uuid;
+                const list = rawMemberData?.[uuid]?.data || [];
+
+                // ========== 修改1：找到最近一次"有坐标"的数据记录 ==========
+                // 用于：在线判定 + 最近上传时间 + 坐标/电量显示
+                let latestWithCoord = null;   // 最近一次有坐标的记录
+                let latestWithCoordTsMs = 0;
+                list.forEach(row => {
+                    const ts = row['设备本地时间'];
+                    const coord = row['经纬度(东经,北纬)']?.trim();
+                    if (!ts || !coord) return;   // 必须同时有时间和坐标才算有效
+                    const tMs = new Date(ts).getTime();
+                    if (!isNaN(tMs) && tMs > latestWithCoordTsMs) {
+                        latestWithCoordTsMs = tMs;
+                        latestWithCoord = row;
+                    }
+                });
+
+                // ========== 修改2：在线判定 ==========
+                // 规则：最近 5 分钟内有"有坐标"的记录 → 在线；否则（坐标空或超过 5 分钟）→ 离线
+                let online = false;
+                if (latestWithCoord && latestWithCoordTsMs > 0) {
+                    if (now.getTime() - latestWithCoordTsMs <= FIVE_MINUTES_MS) {
+                        online = true;
+                    }
+                }
+
+                // 成员信息
+                const name = member.name || `成员${idx+1}`;
+                const statusHtml = online
+                    ? `<span class="status-badge online"><span class="dot"></span>在线</span>`
+                    : `<span class="status-badge offline"><span class="dot"></span>离线</span>`;
+
+                // ========== 修改3：最近上传时间 = 最近一次"有坐标"的上传时间 ==========
+                const latestTime = latestWithCoordTsMs > 0
+                    ? formatTimeText(new Date(latestWithCoordTsMs))
+                    : '-';
+
+                // 坐标/电量 也均来自 "有坐标" 的那条记录
+                const coord = latestWithCoord?.['经纬度(东经,北纬)']?.trim() || '-';
+                const battery = latestWithCoord?.['剩余电量百分比'] != null
+                    ? `${latestWithCoord['剩余电量百分比']}%`
+                    : '-';
+
+                html += `
+                    <div class="member-mini-card">
+                        <div class="member-status-col">
+                            <div class="member-name">${name}</div>
+                            ${statusHtml}
+                        </div>
+                        <div class="member-data-col">
+                            <div class="mini-field">
+                                <span class="label">最近上传时间</span>
+                                <span class="val ${latestTime === '-' ? 'empty' : ''}">${latestTime}</span>
+                            </div>
+                            <div class="mini-field">
+                                <span class="label">坐标 (经,纬)</span>
+                                <span class="val ${coord === '-' ? 'empty' : ''}">${coord}</span>
+                            </div>
+                            <div class="mini-field">
+                                <span class="label">剩余电量</span>
+                                <span class="val ${battery === '-' ? 'empty' : ''}">${battery}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            wrap.innerHTML = html;
+        }
+
+        // ========== 当前时间：每秒刷新 ==========
+        function updateCurrentTime() {
+            const ctEl = document.getElementById('currentTimeVal');
+            if (!ctEl) return;
+            const n = new Date();
+            const pad = (v) => String(v).padStart(2, '0');
+            ctEl.textContent = `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())} ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+        }
+
+        // ========== 整页数据：每分钟刷新（实时信息 + 地图 + 表格） ==========
+        // 注意：不重复刷新图片列表（变动少），若需要也可加入
+        function refreshAllData() {
+            if (typeof loadTaskData === 'function') loadTaskData();
+        }
+
+        // 加载主表格数据
+        function loadTaskData() {
+            const taskId = getTaskIdFromUrl();
+            const displayWrap = document.getElementById('dataDisplay');
+            if (!taskId) {
+                displayWrap.innerHTML = '<div class="error">无效任务ID</div>';
+                return;
+            }
+            document.getElementById('taskId').textContent = taskId;
+            const formData = new FormData();
+            formData.append('task_id', taskId);
+
+            fetch('/user/get_task_data', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(resData => {
+                if (!resData.success) {
+                    displayWrap.innerHTML = `<div class="error">${resData.msg}</div>`;
+                    return;
+                }
+                const taskInfo = resData.taskInfo;
+                if (!taskInfo?.member_list) {
+                    displayWrap.innerHTML = '<div class="error">任务成员数据缺失</div>';
+                    return;
+                }
+                // 板块一：信息 渲染
+                document.getElementById('participantCount').textContent = taskInfo.participant_count || '-';
+                document.getElementById('taskName').textContent = taskInfo.name || taskInfo.id || '-';
+                // 授权用户显示（逗号分隔，如果是列表则逐个显示）
+                const authRaw = taskInfo.authorized_users || taskInfo.auth_users || [];
+                let authText = '';
+                if (Array.isArray(authRaw) && authRaw.length > 0) {
+                    authText = authRaw.join('、');
+                } else if (typeof authRaw === 'string' && authRaw) {
+                    authText = authRaw;
+                } else {
+                    authText = '暂无授权用户';
+                }
+                document.getElementById('authUsers').textContent = authText;
+
+                // 板块二：实时信息 渲染
+                try {
+                    renderRealtimeInfo(taskInfo.member_list, resData.data);
+                } catch(err) {
+                    console.error('实时信息渲染失败:', err);
+                    document.getElementById('realtimeList').innerHTML = '<div class="error">实时信息加载失败</div>';
+                }
+                // 初始化时间轴轨迹地图（多成员同时显示）
+                try {
+                    initTrackMap(taskId, resData);
+                } catch(err) {
+                    console.error('地图初始化失败:', err);
+                }
+                // 对齐数据
+                const alignResult = alignAllMemberData(taskInfo.member_list, resData.data);
+                // 缓存原始数据，供视图切换
+                cachedMemberList = taskInfo.member_list;
+                cachedAlignResult = alignResult;
+                // 根据当前视图生成表格
+                if (currentView === 'sync') {
+                    displayWrap.innerHTML = buildSyncTableHtml(taskInfo.member_list, alignResult);
+                    setTimeout(() => bindScrollSync(taskInfo.member_list), 120);
+                } else {
+                    displayWrap.innerHTML = buildPlainTableHtml(taskInfo.member_list, alignResult);
+                }
+            })
+            .catch(err => {
+                displayWrap.innerHTML = `<div class="error">接口加载失败: ${err}</div>`;
+            });
+        }
+
+        // 图片模块逻辑（完全保留原版）
+        function loadPhotoData() {
+            const taskId = getTaskIdFromUrl();
+            const photoWrap = document.getElementById('photoDisplay');
+            if (!taskId) {
+                photoWrap.innerHTML = '<div class="error">无效任务ID</div>';
+                return;
+            }
+            const formData = new FormData();
+            formData.append('task_id', taskId);
+            fetch('/user/get_task_data', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(resData => {
+                if (!resData.success || !resData.taskInfo?.member_list) {
+                    photoWrap.innerHTML = '<div class="error">任务信息异常</div>';
+                    return;
+                }
+                let html = '';
+                resData.taskInfo.member_list.forEach((m, i) => {
+                    html += `
+                    <div class="member-card bg-gray-100 rounded-lg mb-4 overflow-hidden shadow">
+                        <div class="bg-slate-800 text-white p-4">
+                            <h3 class="text-lg font-medium">成员${i+1}:${m.name}</h3>
+                            <p class="text-sm opacity-75 mt-1">UUID:${m.uuid}</p>
+                        </div>
+                        <div class="photo-scroll" id="photos-${m.uuid}"><div class="loading">加载图片...</div></div>
+                    </div>`;
+                });
+                photoWrap.innerHTML = html;
+                resData.taskInfo.member_list.forEach(m => loadMemberPhotos(taskId, m.uuid));
+            })
+            .catch(err => {
+                photoWrap.innerHTML = `<div class="error">图片加载失败:${err}</div>`;
+            });
+        }
+        function loadMemberPhotos(taskId, uuid) {
+            const container = document.getElementById(`photos-${uuid}`);
+            fetch(`/api/photo-api/list?task_id=${taskId}&uuid=${uuid}`)
+            .then(r => r.json())
+            .then(picData => {
+                if (!picData.success || picData.data.length === 0) {
+                    container.innerHTML = '<div class="no-data">无采集图片</div>';
+                    return;
+                }
+                let picHtml = '';
+                picData.data.forEach(pic => {
+                    const match = pic.filename.match(/(\d{14})/);
+                    let dStr = '', tStr = '';
+                    if (match) {
+                        const ts = match[1];
+                        dStr = `${ts.slice(0,4)}年${+ts.slice(4,6)}月${+ts.slice(6,8)}日`;
+                        tStr = `${ts.slice(8,10)}:${ts.slice(10,12)}:${ts.slice(12,14)}`;
+                    }
+                    picHtml += `
+                    <div class="photo-item" onclick="openModal('${pic.url}')">
+                        <div class="photo-time"><div class="date">${dStr}</div><div class="time">${tStr}</div></div>
+                        <div class="photo-image"><img src="${pic.url}" alt="采集图片"></div>
+                    </div>`;
+                });
+                container.innerHTML = picHtml;
+            })
+            .catch(e => container.innerHTML = `<div class="error">图片读取失败${e}</div>`);
+        }
+        function openModal(src) {
+            const modal = document.getElementById('imageModal');
+            document.getElementById('modalImage').src = src;
+            modal.style.display = 'block';
+        }
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+        window.onclick = function(e) {
+            const modal = document.getElementById('imageModal');
+            if (e.target === modal) closeModal();
+        }
+        window.onload = function() {
+            loadTaskData();
+            loadPhotoData();
+            // 立即刷新一次时间，随后每秒刷新
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            // 每分钟刷新一次页面数据（实时信息 + 地图 + 表格）
+            setInterval(refreshAllData, 60 * 1000);
+        }
+    </script>
+</body>
+</html>

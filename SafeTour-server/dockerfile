@@ -1,0 +1,42 @@
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/python:3.12-slim
+
+# 设置工作目录
+WORKDIR /app
+
+# ======== 第 1 阶段：设置时区与字符集
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+ENV TZ=Asia/Shanghai
+
+# 配置国内 apt 源（清华源：中国科学技术大学镜像）
+RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list.d/debian.sources || true \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       tzdata \
+       ca-certificates \
+    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo "Asia/Shanghai" > /etc/timezone \
+    && dpkg-reconfigure -f noninteractive tzdata 2>/dev/null || true \
+    && rm -rf /var/lib/apt/lists/*
+
+# ======== 第 2 阶段：复制依赖文件与安装
+# 先复制 requirements.txt，便于 Docker 缓存依赖
+COPY requirements.txt ./
+
+# 使用清华 pip 源安装依赖
+RUN pip install --no-cache-dir \
+    -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    --trusted-host pypi.tuna.tsinghua.edu.cn \
+    -r requirements.txt
+
+# ======== 第 3 阶段：复制应用代码
+COPY . .
+
+# 自动同意 eula 协议（Docker 环境下自动创建 eula=true）
+RUN echo "eula=true" > /app/eula.txt
+
+# 暴露 Flask 端口
+EXPOSE 21121
+
+# 启动命令：直接运行 start.py
+CMD ["python", "start.py"]

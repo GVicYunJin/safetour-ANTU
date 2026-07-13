@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建任务 - 安途-SafeTour</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 50%, #fce7f3 100%);
+            min-height: 100vh;
+        }
+        .container { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 240px;
+            background: rgba(30, 41, 59, 0.92);
+            backdrop-filter: blur(16px);
+            color: white; padding: 24px 0; display: flex; flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; padding: 0 24px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 16px; }
+        .brand-logo { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+        .brand-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; background: #fff; }
+        .brand-text { font-size: 17px; font-weight: 700; letter-spacing: 0.5px; }
+        .brand-text small { display: block; font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.5); margin-top: 2px; letter-spacing: 1.5px; }
+        .nav-list { flex: 1; padding: 0 12px; }
+        .sidebar a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: rgba(255,255,255,0.8); text-decoration: none; transition: all 0.3s ease; border-radius: 12px; margin-bottom: 4px; font-size: 14px; }
+        .sidebar a:hover { background: rgba(255,255,255,0.08); color: #fff; transform: translateX(4px); }
+        .sidebar a::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+        .sidebar a:hover::before { background: #10b981; }
+        .sidebar a.active { background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(168,85,247,0.4)); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
+        .sidebar a.active::before { background: #10b981; box-shadow: 0 0 8px #10b981; }
+        .sidebar .logout { margin-top: auto; padding: 0 12px; }
+        .sidebar .logout a { color: #f87171; background: rgba(248,113,113,0.1); justify-content: center; }
+        .sidebar .logout a:hover { background: rgba(248,113,113,0.2); color: #fca5a5; }
+        .content { flex: 1; padding: 40px; overflow-y: auto; }
+        .content h2 { color: #1e293b; font-size: 28px; margin-bottom: 8px; font-weight: 700; }
+        .content .subtitle { color: #64748b; font-size: 15px; margin-bottom: 28px; }
+        .form-card {
+            background: rgba(255,255,255,0.75); backdrop-filter: blur(12px);
+            padding: 32px; border-radius: 20px; box-shadow: 0 8px 32px rgba(99,102,241,0.08);
+            border: 1px solid rgba(255,255,255,0.8); max-width: 560px;
+        }
+        .form-group { margin-bottom: 22px; }
+        .form-group label { display: block; margin-bottom: 10px; color: #334155; font-size: 14px; font-weight: 600; }
+        .form-group input { width: 100%; padding: 14px 18px; border: 1.5px solid #e2e8f0; border-radius: 14px; font-size: 15px; background: #fff; color: #1e293b; transition: all 0.2s ease; outline: none; }
+        .form-group input::placeholder { color: #94a3b8; }
+        .form-group input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+        .name-inputs {
+            margin-top: 18px; padding: 20px; border-radius: 16px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(168,85,247,0.05));
+            border: 1.5px dashed rgba(99,102,241,0.2);
+        }
+        .name-inputs h4 { color: #4338ca; font-size: 15px; margin-bottom: 14px; }
+        .name-input-item { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .name-input-item .idx { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 10px; font-size: 13px; font-weight: 600; color: #6366f1; flex-shrink: 0; }
+        .name-input-item input { flex: 1; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; background: #fff; outline: none; transition: all 0.2s ease; }
+        .name-input-item input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.08); }
+        .btn { padding: 14px 32px; background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
+        .alert { padding: 14px 20px; margin-top: 20px; border-radius: 14px; display: none; font-size: 14px; font-weight: 500; border-left: 4px solid; }
+        .alert-success { background: rgba(16,185,129,0.1); color: #065f46; border-left-color: #10b981; }
+        .alert-error { background: rgba(239,68,68,0.1); color: #991b1b; border-left-color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="brand">
+                <div class="brand-logo"><img src="/logo.png" alt="Logo"></div>
+                <div class="brand-text">安途-SafeTour<small>管 理 后 台</small></div>
+            </div>
+            <div class="nav-list">
+                <a href="/admin/user_manage">用户管理</a>
+                <a href="/admin/task_create" class="active">创建任务</a>
+                <a href="/admin/task_auth">任务权限</a>
+                <a href="/admin/task_manage">任务管理</a>
+                <a href="/admin/qq_push">QQ推送管理</a>
+                <a href="/admin/about">关于</a>
+            </div>
+            <div class="logout">
+                <a href="/admin/logout">退出登录</a>
+            </div>
+        </div>
+        <div class="content">
+            <h2>创建新任务</h2>
+            <div class="subtitle">填写任务信息并添加成员</div>
+
+            <div class="form-card">
+                <form id="createTaskForm">
+                    <div class="form-group">
+                        <label>任务ID</label>
+                        <input type="text" id="task_id" name="task_id" required placeholder="支持英文、数字、汉字（如：清明出行-001）" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label>任务参与人数</label>
+                        <input type="number" id="participant_count" name="participant_count" min="1" required placeholder="请输入正整数" onchange="generateNameInputs()">
+                    </div>
+
+                    <div id="nameInputsContainer" class="name-inputs" style="display: none;">
+                        <h4>📝 成员姓名填写</h4>
+                        <div id="nameInputsList"></div>
+                    </div>
+
+                    <button type="submit" class="btn">✨ 创建任务</button>
+                </form>
+                <div id="alert" class="alert"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 显示提示框
+        function showAlert(message, isSuccess) {
+            const alert = document.getElementById("alert");
+            alert.textContent = message;
+            alert.className = "alert " + (isSuccess ? "alert-success" : "alert-error");
+            alert.style.display = "block";
+            setTimeout(() => {
+                alert.style.display = "none";
+            }, 3000);
+        }
+
+        // 动态生成姓名输入框
+        function generateNameInputs() {
+            const count = document.getElementById("participant_count").value;
+            const container = document.getElementById("nameInputsContainer");
+            const list = document.getElementById("nameInputsList");
+            
+            // 清空原有输入框
+            list.innerHTML = "";
+            
+            if (count && count > 0) {
+                container.style.display = "block";
+                // 生成对应数量的姓名输入框
+                for (let i = 0; i < count; i++) {
+                    const item = document.createElement("div");
+                    item.className = "name-input-item";
+                    item.innerHTML = `
+                        <span class="num">${i+1}</span>
+                        <input type="text" name="participant_names[]" placeholder="请输入成员姓名" required>
+                    `;
+                    list.appendChild(item);
+                }
+            } else {
+                container.style.display = "none";
+            }
+        }
+
+        // 创建任务
+        document.getElementById("createTaskForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch("/admin/task_create", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.msg, data.success);
+                if (data.success) {
+                    // 清空表单
+                    this.reset();
+                    document.getElementById("nameInputsContainer").style.display = "none";
+                }
+            })
+            .catch(error => {
+                showAlert("请求失败：" + error, false);
+            });
+        });
+    </script>
+</body>
+</html>

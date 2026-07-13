@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务数据 - 安途-SafeTour</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #d1fae5 0%, #dbeafe 50%, #ede9fe 100%);
+            min-height: 100vh;
+        }
+        .container { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(16px);
+            color: white; padding: 24px 0; display: flex; flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; padding: 0 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 16px; }
+        .brand-logo { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #10b981, #6366f1); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
+        .brand-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; background: #fff; border-radius: 10px; }
+        .brand-text { font-size: 17px; font-weight: 700; letter-spacing: 0.5px; }
+        .brand-text small { display: block; font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.5); margin-top: 2px; letter-spacing: 1px; }
+        .user-info {
+            text-align: center; margin-bottom: 20px; padding: 14px 20px;
+            background: rgba(255,255,255,0.05); margin: 0 16px 20px; border-radius: 14px;
+            color: #e2e8f0; font-size: 14px; font-weight: 500;
+        }
+        .user-info .emoji { font-size: 24px; display: block; margin-bottom: 6px; }
+        .task-list-title { padding: 0 24px 10px; color: rgba(255,255,255,0.5); font-size: 12px; letter-spacing: 1px; font-weight: 500; text-transform: uppercase; }
+        .task-list { flex: 1; padding: 0 12px; overflow-y: auto; }
+        .task-item {
+            padding: 14px 16px; cursor: pointer; transition: all 0.3s ease;
+            border-radius: 12px; margin-bottom: 6px; color: rgba(255,255,255,0.8);
+            font-size: 14px; display: flex; align-items: center; gap: 10px;
+        }
+        .task-item::before { content: '📋'; font-size: 14px; opacity: 0.7; }
+        .task-item:hover, .task-item.active {
+            background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(99,102,241,0.25));
+            color: #fff; transform: translateX(4px); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+        }
+        .task-item.active::before { opacity: 1; }
+        .task-item.empty { color: rgba(255,255,255,0.4); justify-content: center; cursor: default; }
+        .task-item.empty:hover { background: transparent; transform: none; box-shadow: none; }
+        .sidebar .logout { margin-top: auto; padding: 0 16px; }
+        .sidebar .logout a {
+            display: block; color: #f87171; background: rgba(248,113,113,0.1);
+            text-decoration: none; padding: 12px 20px; border-radius: 12px; text-align: center;
+            font-size: 14px; font-weight: 500; transition: all 0.3s ease;
+        }
+        .sidebar .logout a:hover { background: rgba(248,113,113,0.2); color: #fca5a5; }
+        .content { flex: 1; padding: 32px 40px; overflow-y: auto; }
+        .content h2 { color: #0f172a; font-size: 28px; margin-bottom: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+        .data-card {
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(12px);
+            padding: 30px; border-radius: 20px; box-shadow: 0 8px 32px rgba(16,185,129,0.1);
+            border: 1px solid rgba(255,255,255,0.6); min-height: 400px; overflow: auto;
+        }
+        .data-empty { text-align: center; color: #64748b; padding: 80px 20px; font-size: 15px; }
+        .data-empty .emoji { font-size: 64px; display: block; margin-bottom: 16px; opacity: 0.7; }
+        pre {
+            white-space: pre-wrap; word-wrap: break-word; font-size: 13px; color: #1e293b;
+            background: rgba(15,23,42,0.04); padding: 20px; border-radius: 12px;
+            font-family: 'SF Mono', Menlo, Consolas, monospace; line-height: 1.7;
+            border: 1px solid rgba(15,23,42,0.06);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="brand">
+                <div class="brand-logo"><img src="/logo.png" alt="Logo"></div>
+                <div class="brand-text">安途-SafeTour<small>用 户 中 心</small></div>
+            </div>
+            <div class="user-info">
+                <span class="emoji">👋</span>
+                欢迎：{{ nickname }}
+            </div>
+            <div class="task-list-title">我的任务</div>
+            <div class="task-list" id="taskList">
+                {% if authorized_tasks %}
+                    {% for task in authorized_tasks %}
+                    <div class="task-item" data-id="{{ task.id }}">
+                        {{ task.id }}（{{ task.participant_count }}人）
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="task-item empty">暂无授权任务</div>
+                {% endif %}
+            </div>
+            <div class="logout">
+                <a href="/user/logout">退出登录</a>
+            </div>
+        </div>
+        <div class="content">
+            <h2>📊 任务数据展示</h2>
+            <div class="data-card" id="dataDisplay">
+                <div class="data-empty">
+                    <span class="emoji">📋</span>
+                    请从左侧选择任务查看数据
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 任务点击事件
+        document.querySelectorAll(".task-item").forEach(item => {
+            item.addEventListener("click", function() {
+                // 移除其他任务的激活状态
+                document.querySelectorAll(".task-item").forEach(i => i.classList.remove("active"));
+                // 添加当前任务激活状态
+                this.classList.add("active");
+                
+                const taskId = this.getAttribute("data-id");
+                const dataDisplay = document.getElementById("dataDisplay");
+                
+                // 加载中提示
+                dataDisplay.innerHTML = '<div class="data-empty">加载中...</div>';
+                
+                // 请求任务数据
+                const formData = new FormData();
+                formData.append("task_id", taskId);
+                
+                fetch("/user/get_task_data", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 格式化JSON展示
+                        const formattedData = JSON.stringify(data.data, null, 2);
+                        dataDisplay.innerHTML = `<pre>${formattedData}</pre>`;
+                    } else {
+                        dataDisplay.innerHTML = `<div class="data-empty" style="color: #dc3545;">${data.msg}</div>`;
+                    }
+                })
+                .catch(error => {
+                    dataDisplay.innerHTML = `<div class="data-empty" style="color: #dc3545;">加载失败：${error}</div>`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
